@@ -16,20 +16,35 @@ echo './wdd $*'>>./wd
 echo 'cd $save_path'>>./wd
 
 sysOS=`uname -s`
-if [ $sysOS == "Darwin" ];then
-    sudo cp ./wd /usr/local/bin/wd
-    sudo chmod +x /usr/local/bin/wd
-    # 添加bash自动补全
-    sudo rm -f /usr/local/etc/bash_completion.d/wd
-    sudo cp wd_com /usr/local/etc/bash_completion.d/wd
-    . /usr/local/etc/bash_completion.d/wd
-else
-    sudo cp ./wd /usr/bin/wd
-    sudo chmod +x /usr/bin/wd
-    # 添加bash_completion自动补全
-    sudo rm -f /etc/bash_completion.d/wd
-    sudo cp wd_com /etc/bash_completion.d/wd
-    . /etc/bash_completion.d/wd
+local_bashcompletion_dir=${BASH_COMPLETION_USER_DIR:-${XDG_DATA_HOME:-$HOME/.local/share}/bash-completion}/completions
+
+function JudgeDo ()
+{
+    local prompt="$1"
+    local choice
+    read -p "$prompt" choice;
+    if [[ $choice == 'y' ]];then
+        echo t
+    else
+        echo nil
+    fi
+}
+
+function RegisteWD ()
+{
+    mkdir -p ~/.local/bin
+    cp ./wd ~/.local/bin/wd
+    chmod +x ~/.local/bin/wd
+}
+
+RegisteWD
+
+if [[ $(JudgeDo "Add bash auto completion for 'wd'? ") == 't' ]]
+then
+    mkdir -p ${local_bashcompletion_dir}
+    rm -f ${local_bashcompletion_dir}/wd
+    cp wd_com ${local_bashcompletion_dir}/wd
+    . ${local_bashcompletion_dir}/wd
 fi
 
 echo 'Setup Finished! '

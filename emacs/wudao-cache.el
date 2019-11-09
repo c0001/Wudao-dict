@@ -90,8 +90,17 @@
   (wudao/cache--batch-extract-desc)
   (wudao/cache--batch-extract-full))
 
+(defun wudao/cache--case-fold-string= (a b)
+  (eq t (compare-strings a nil nil b nil nil t)))
+
+(defun wudao/cache--case-fold-string-hash (a)
+  (sxhash-equal (upcase a)))
+
+(define-hash-table-test 'wudao/cache--case-fold-test
+  'wudao/cache--case-fold-string= 'wudao/cache--case-fold-string-hash)
+
 (defun wudao/cache--create-hash-table (alist)
-  (let ((hst (make-hash-table :test 'equal)))
+  (let ((hst (make-hash-table :test 'wudao/cache--case-fold-test)))
     (dolist (el alist)
       (let ((word (car el))
             (def (cdr el)))

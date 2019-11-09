@@ -102,6 +102,6 @@ ENV/
 /wudao-dict/dict/dict.index
 /wudao-dict/dict/zh_dict.index
 /wudao-dict/dict/zh_dict.json
-/wudao-dict/wd
+# /wudao-dict/wd
 /wudao-dict/IP
 

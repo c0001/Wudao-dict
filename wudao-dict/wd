@@ -1,0 +1,16 @@
+#!/bin/bash
+wd_sourcedir="${BASH_SOURCE[0]}"
+while [ -h "$wd_sourcedir" ]; do # resolve $wd_sourcedir until the file is no longer a symlink
+    wd_dir="$( cd -P "$( dirname "$wd_sourcedir" )" >/dev/null && pwd )"
+    wd_sourcedir="$(readlink "$wd_sourcedir")"
+
+    # if $wd_sourcedir was a relative symlink, we need to resolve it relative
+    # to the path where the symlink file was located
+    [[ $wd_sourcedir != /* ]] && wd_sourcedir="$wd_dir/$wd_sourcedir" 
+done
+wd_dir="$( cd -P "$( dirname "$wd_sourcedir" )" >/dev/null && pwd )"
+
+save_path=$PWD
+cd $wd_dir
+./wdd $*
+cd $save_path

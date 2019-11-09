@@ -1,4 +1,14 @@
 #!/bin/bash
+wd_sourcedir="${BASH_SOURCE[0]}"
+while [ -h "$wd_sourcedir" ]; do # resolve $wd_sourcedir until the file is no longer a symlink
+    wd_dir="$( cd -P "$( dirname "$wd_sourcedir" )" >/dev/null && pwd )"
+    wd_sourcedir="$(readlink "$wd_sourcedir")"
+
+    # if $wd_sourcedir was a relative symlink, we need to resolve it relative
+    # to the path where the symlink file was located
+    [[ $wd_sourcedir != /* ]] && wd_sourcedir="$wd_dir/$wd_sourcedir" 
+done
+wd_dir="$( cd -P "$( dirname "$wd_sourcedir" )" >/dev/null && pwd )"
 
 # 用户词
 if [ ! -d usr ]
@@ -7,13 +17,6 @@ then
 fi
 
 chmod -R 777 usr
-
-# 添加系统命令wd
-echo '#!/bin/bash'>./wd
-echo 'save_path=$PWD'>>./wd
-echo 'cd '$PWD >>./wd
-echo './wdd $*'>>./wd
-echo 'cd $save_path'>>./wd
 
 sysOS=`uname -s`
 local_bashcompletion_dir=${BASH_COMPLETION_USER_DIR:-${XDG_DATA_HOME:-$HOME/.local/share}/bash-completion}/completions
@@ -33,7 +36,8 @@ function JudgeDo ()
 function RegisteWD ()
 {
     mkdir -p ~/.local/bin
-    cp ./wd ~/.local/bin/wd
+    rm -f ~/.local/bin/wd
+    cd ~/.local/bin && ln -s $wd_dir/wd ./wd && cd $wd_dir
     chmod +x ~/.local/bin/wd
 }
 
@@ -43,7 +47,7 @@ if [[ $(JudgeDo "Add bash auto completion for 'wd'? ") == 't' ]]
 then
     mkdir -p ${local_bashcompletion_dir}
     rm -f ${local_bashcompletion_dir}/wd
-    cp wd_com ${local_bashcompletion_dir}/wd
+    cd ${local_bashcompletion_dir} && ln -s $wd_dir/wd_com ./wd && cd $wd_dir
     . ${local_bashcompletion_dir}/wd
 fi
 

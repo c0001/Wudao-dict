@@ -1,7 +1,3 @@
-Install=cd wudao-dict && bash setup.sh
-BatchQuery=bash query-batch.sh
-
-
 help:
 	@printf "==================================================\n";
 	@printf "             Wudao dict makefile\n";
@@ -19,7 +15,10 @@ help:
 	@printf "\n";
 
 install:
-	$(Install)
+	@cd wudao-dict && bash setup.sh
+
+uninstall:
+	@cd wudao-dict && bash uninstall.sh
 
 batch-query:
-	$(BatchQuery)
+	@bash query-batch.sh

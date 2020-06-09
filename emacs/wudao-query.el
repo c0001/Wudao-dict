@@ -1,12 +1,16 @@
+;; * code
 (require 'wudao-cache)
 
+;; ** var
 (defvar wudao/query--hash-plist nil)
+(defvar wudao/query-en-words-completion-tatble nil)
 
+;; ** library
 (defun wudao/query--ansi-color-apply (string)
   "The same as `ansi-color-apply', but using `face' instead of
 `font-lock-faace' for make `message' colorized."
   (let ((codes (car ansi-color-context))
-	(start 0) end result)
+        (start 0) end result)
     ;; If context was saved and is a string, prepend it.
     (if (cadr ansi-color-context)
         (setq string (concat (cadr ansi-color-context) string)
@@ -32,10 +36,10 @@
     ;; save context, add the remainder of the string to the result
     (let (fragment)
       (if (string-match "\033" string start)
-	  (let ((pos (match-beginning 0)))
-	    (setq fragment (substring string pos))
-	    (push (substring string start pos) result))
-	(push (substring string start) result))
+          (let ((pos (match-beginning 0)))
+            (setq fragment (substring string pos))
+            (push (substring string start pos) result))
+        (push (substring string start) result))
       (setq ansi-color-context (if (or codes fragment) (list codes fragment))))
     (apply 'concat (nreverse result))))
 
@@ -45,6 +49,106 @@
             (wudao/cache-read-hash))
     wudao/query--hash-plist))
 
+(defun wudao/query--get-compatible-en-words (en-words-list)
+  (delete
+   nil
+   (mapcar
+    (lambda (x)
+      (let ((x-1 (substring-no-properties (wudao/query-word-by-hash x))))
+        (unless (string-match-p (rx (or "===Empty===" "===NOFOUND===")) x-1)
+          x)))
+    en-words-list)))
+
+(defun wudao/query--make-en-words-completion-table (en-words-list)
+  (wudao/query--get-hash)
+  (let ((vc-reg (rx line-start (or "英/美 " "英 " "美 ")))
+        (term-reg "CET[0-9]\\|TEM[0-9]\\|^( .+ )")
+        (case-fold-search nil)
+        tempo-register)
+    (when (alist-get en-words-list wudao/query-en-words-completion-tatble
+                     nil nil 'equal)
+      (setq wudao/query-en-words-completion-tatble
+            (delete
+             nil
+             (mapcar
+              (lambda (x)
+                (unless (equal (car x) en-words-list)
+                  x))
+              wudao/query-en-words-completion-tatble))))
+    (redisplay t)
+    (message "Get \"wudao/query-en-words-completion-tatble\" ... ")
+    (dolist (word (wudao/query--get-compatible-en-words en-words-list))
+      (let ((cache
+             (wudao/query-word-by-hash
+              word
+              nil))
+            (cache-full
+             (wudao/query-word-by-hash
+              word
+              t)))
+        (let (sp-list final-list vc-var trans-list)
+          (setq sp-list
+                (split-string
+                 (substring-no-properties
+                  cache)
+                 "\n" t))
+          (setq vc-var (nth 1 sp-list)
+                vc-var (and (ignore-errors (string-match-p vc-reg vc-var))
+                            vc-var))
+          (when vc-var
+            (setq vc-var
+                  (replace-regexp-in-string
+                   "英" "UK>"
+                   (replace-regexp-in-string
+                    "美" "US>"
+                    (replace-regexp-in-string
+                     "英/美" "UK/US"
+                     vc-var)))))
+          (setq
+           trans-list
+           (delete
+            nil
+            (mapcar
+             (lambda (x)
+               (unless (string-match-p term-reg x)
+                 (let ((prop-reg "^\\([a-z]+\\.\\) ?"))
+                   (list :prop (when (string-match prop-reg x) (match-string 1 x))
+                         :desc (replace-regexp-in-string prop-reg "" x)))))
+             (if vc-var (cddr sp-list) (cdr sp-list))))
+           trans-list
+           (list :prop-list
+                 (remove-duplicates
+                  (delete nil
+                          (mapcar (lambda (x) (plist-get x :prop)) trans-list))
+                  :test 'string=)
+                 :details trans-list)
+           final-list
+           (list word
+                 :phonetic vc-var
+                 :translation
+                 `((chinese-simplified
+                    :annotation ,trans-list
+                    :short-trans ,cache
+                    :full-trans ,cache-full
+                    ))))
+          (when final-list
+            (push
+             final-list
+             tempo-register)))))
+    (setq tempo-register
+          (reverse tempo-register)
+          tempo-register
+          (mapcar
+           (lambda (x)
+             (propertize (car x)
+                         'wudao/query-en-words-completion
+                         (cdr x)))
+           tempo-register))
+    (push (cons en-words-list tempo-register)
+          wudao/query-en-words-completion-tatble)
+    tempo-register))
+
+;; ** main
 ;;;###autoload
 (defun wudao/query-word-by-hash (query &optional full)
   (let* ((hsp (wudao/query--get-hash))
@@ -68,4 +172,32 @@
       (setq cbk nil))
     cbk))
 
+(defun wudao/query-get-en-words-completion-table (en-words-list &optional force)
+  (if force
+      (wudao/query--make-en-words-completion-table en-words-list)
+    (or (alist-get en-words-list wudao/query-en-words-completion-tatble
+                   nil nil 'equal)
+        (wudao/query--make-en-words-completion-table en-words-list))))
+
+(defun wudao/query-get-en-words-property (word attr trans-lang)
+  (let* ((cache (get-text-property 0 'wudao/query-en-words-completion word))
+         (trans (alist-get trans-lang (plist-get cache :translation)))
+         (annotation (plist-get trans :annotation))
+         ;; ----------------------------------
+         (phonetic '(plist-get cache :phonetic))
+         (prop-list '(plist-get annotation :prop-list))
+         (details '(plist-get annotation :details))
+         (short-trans '(plist-get trans :short-trans))
+         (full-trans '(plist-get trans :full-trans)))
+    (when cache
+      (cl-case attr
+        (entry cache)
+        (phonetic (eval phonetic))
+        (prop-list (eval prop-list))
+        (details (eval details))
+        (short-trans (eval short-trans))
+        (full-trans (eval full-trans))))))
+
+
+;; * provide
 (provide 'wudao-query)

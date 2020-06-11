@@ -44,10 +44,12 @@
     (apply 'concat (nreverse result))))
 
 (defun wudao/query--get-hash ()
-  (if (null wudao/query--hash-plist)
-      (setq wudao/query--hash-plist
-            (wudao/cache-read-hash))
-    wudao/query--hash-plist))
+  ;; restrict `gc-cons-threshold' prevents memory overflow
+  (let ((gc-cons-threshold 80000))
+    (if (null wudao/query--hash-plist)
+        (setq wudao/query--hash-plist
+              (wudao/cache-read-hash))
+      wudao/query--hash-plist)))
 
 (defun wudao/query--get-compatible-en-words (en-words-list)
   (delete

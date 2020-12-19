@@ -1,5 +1,6 @@
 ;; * code
 (require 'wudao-cache)
+(require 'wudao-lib)
 
 ;; ** var
 (defvar wudao/query--hash-plist nil)
@@ -78,7 +79,7 @@
                   x))
               wudao/query-en-words-completion-tatble))))
     (redisplay t)
-    (message "Get \"wudao/query-en-words-completion-tatble\" ... ")
+    (wudao/lib-message "Get \"wudao/query-en-words-completion-tatble\" ... ")
     (dolist (word (wudao/query--get-compatible-en-words en-words-list))
       (let ((cache
              (wudao/query-word-by-hash

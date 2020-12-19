@@ -1,3 +1,5 @@
+(require 'wudao-lib)
+
 (defvar wudao/cache--host-dir
   (file-name-directory load-file-name))
 
@@ -44,7 +46,7 @@
                        "===Empty===\n\n"))
           wudao/cache--dict-cache-list)
     (when noninteractive
-      (message "pick '%s'" word))
+      (wudao/lib-message "pick '%s'" word))
     t))
 
 (defun wudao/cache--print-item ()
@@ -58,7 +60,7 @@
 
 (defmacro wudao/cache--batch-extract-core (cache-file output-file)
   `(unless (file-exists-p ,output-file)
-     (message "Extract '%s'  ..." ,cache-file)
+     (wudao/lib-message "Extract '%s'  ..." ,cache-file)
      (setq wudao/cache--dict-cache-list nil)
      (with-temp-buffer
        (insert-file-contents ,cache-file)
@@ -71,7 +73,7 @@
          (wudao/cache--print-item)
          (goto-char (point-min))
          (write-file ,output-file))
-       (message "Complete!"))))
+       (wudao/lib-message "Complete!"))))
 
 (defun wudao/cache--read-hash-core (hash-file)
   (let ((inhibit-read-only t))
@@ -114,7 +116,7 @@
                   (,wudao/cache--hash-file-full . wudao/cache--hashed-full)))
     (if (not (file-exists-p (car hsfv)))
         (error "Cache not extracted for '%s'!" (car hsfv))
-      (message "Reading '%s' ..." (symbol-name (cdr hsfv)))
+      (wudao/lib-message "Reading '%s' ..." (symbol-name (cdr hsfv)))
       (set (cdr hsfv) (wudao/cache--read-hash-core (car hsfv)))))
   (list :short (wudao/cache--create-hash-table wudao/cache--hashed-desc)
         :full  (wudao/cache--create-hash-table wudao/cache--hashed-full)))

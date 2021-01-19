@@ -48,7 +48,8 @@ class WudaoCommand:
             print('Youdao is wudao, a powerful dict.')
             print('-k, --kill             kill the server process       (退出服务进程)')
             print('-h, --help             display this help and exit    (查看帮助)')
-            print('-s, --short            do or don\'t show sentences    (简明/完整模式)')
+            print('-s, --short            don\'t show sentences         (简明)')
+            print('-l, --long             do show sentences             (完整模式)')
             print('-i, --inter            interaction mode              (交互模式)')
             print('-n, --note             save/not save to notebook     (保存/不保存到生词本)')
             print('-v, --version          version info                  (版本信息)')
@@ -74,11 +75,13 @@ class WudaoCommand:
             sys.exit(0)
         # conf change
         if '-s' in self.param_list or '--short' in self.param_list:
-            self.conf['short'] = not self.conf['short']
-            if self.conf['short']:
-                print('简明模式已开启！再次键入 wd -s 切换到完整模式')
-            else:
-                print('完整模式已开启！再次键入 wd -s 切换到简明模式')
+            self.conf['short'] = True
+            print('简明模式已开启！再次键入 wd -l 切换到完整模式')
+
+        if '-l' in self.param_list or '--long' in self.param_list:
+            self.conf['short'] = False
+            print('完整模式已开启！再次键入 wd -s 切换到简明模式')
+
         if '-n' in self.param_list or '--note' in self.param_list:
             self.conf['save'] = not self.conf['save']
             if self.conf['save']:

@@ -76,11 +76,13 @@ class WudaoCommand:
         # conf change
         if '-s' in self.param_list or '--short' in self.param_list:
             self.conf['short'] = True
-            print('简明模式已开启！再次键入 wd -l 切换到完整模式')
+            if self.word == '':
+                print('简明模式已开启！再次键入 wd -l 切换到完整模式')
 
         if '-l' in self.param_list or '--long' in self.param_list:
             self.conf['short'] = False
-            print('完整模式已开启！再次键入 wd -s 切换到简明模式')
+            if self.word == '':
+                print('完整模式已开启！再次键入 wd -s 切换到简明模式')
 
         if '-n' in self.param_list or '--note' in self.param_list:
             self.conf['save'] = not self.conf['save']

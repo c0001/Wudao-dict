@@ -163,7 +163,7 @@
 
 (defun wudao/query-word-by-command (query &optional full)
   (let ((sh-cmd-short "wd -s \"%s\"")
-        (sh-cmd-full "wd \"%s\"")
+        (sh-cmd-full "wd -l \"%s\"")
         cbk)
     (setq cbk
           (wudao/query--ansi-color-apply
